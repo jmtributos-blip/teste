@@ -1269,21 +1269,24 @@ from sqlalchemy import create_engine, Column, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# Criar a conexão com o banco SQLite
-engine = create_engine("sqlite:///database.db")  # Arquivo database.db será salvo na mesma pasta
+# ====== CONFIGURAÇÕES INICIAIS ======
+# Criar o arquivo do SQLite (salvo como "database.db")
+engine = create_engine("sqlite:///database.db")
 Base = declarative_base()
 
-# Definir a tabela no banco
+# ====== CRIAR A TABELA "NFS-e" ======
 class NFSe(Base):
     __tablename__ = "nfses"
-    id = Column(Integer, primary_key=True)  # ID único
+    id = Column(Integer, primary_key=True)  # ID único para cada registro
     cliente = Column(String(255), nullable=False)  # Nome do cliente
     data_envio = Column(String(50), nullable=False)  # Data de upload
-    arquivo_xml = Column(Text, nullable=False)  # Conteúdo do arquivo XML
+    arquivo_xml = Column(Text, nullable=False)  # Conteúdo do XML salvo como texto
 
-# Criar o arquivo do banco e a tabela
-Base.metadata.create_all(engine)  # Isso cria o database.db e a tabela 'nfses'
+# Criar as tabelas no banco de dados
+Base.metadata.create_all(engine)
 
-# Sessão para interagir com o banco
+# Configurar conexão com o banco e criar uma sessão para adicionar/registros
 Session = sessionmaker(bind=engine)
 session = Session()
+
+
