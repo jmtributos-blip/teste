@@ -1290,3 +1290,53 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 
+import streamlit as st
+
+# Buscar os registros do banco
+st.header("NFS-es Salvas no Banco de Dados")
+
+# Buscar todos os registros da tabela 'nfses'
+registros = session.query(NFSe).all()  # Pega todos os registros
+
+# Verificar se existem registros
+if not registros:
+    st.info("Nenhuma NFS-e encontrada.")
+else:
+    # Criar uma tabela dinâmica para cada registro
+    for registro in registros:
+        st.subheader(f"NFS-e ID: {registro.id} - Cliente: {registro.cliente}")
+        st.text(f"Data de Envio: {registro.data_envio}")
+
+        # Botão para visualizar o XML do cliente
+        if st.button(f"Visualizar XML ({registro.id})", key=f"ver-{registro.id}"):
+            st.code(registro.arquivo_xml, language="xml")
+
+        # Botão para permitir o download do arquivo XML
+        st.download_button(
+            label="Baixar XML",
+            data=registro.arquivo_xml.encode("utf-8"),
+            file_name=f"{registro.cliente}_nfse_{registro.id}.xml",
+            mime="application/xml"
+        )
+
+
+
+# Filtro por ID ou Nome
+busca_id = st.text_input("Digite o ID ou Nome do Cliente para buscar:")
+if st.button("Buscar"):
+    if busca_id.isdigit():
+        # Filtrar por ID
+        resultado = session.query(NFSe).filter(NFSe.id == int(busca_id)).all()
+    else:
+        # Filtrar por Nome
+        resultado = session.query(NFSe).filter(NFSe.cliente.ilike(f"%{busca_id}%")).all()
+
+    if resultado:
+        for registro in resultado:
+            st.write(f"Resultado encontrado - ID: {registro.id}, Nome: {registro.cliente}")
+            st.code(registro.arquivo_xml, language="xml")
+    else:
+        st.warning("Nenhum registro encontrado para sua busca!")
+
+
+
