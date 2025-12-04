@@ -1,4 +1,4 @@
-import os
+    import os
 
 # Caminho onde o banco deveria estar
 db_path = "database.db"
@@ -1263,3 +1263,27 @@ else:
             mime="application/xml"
         )
 
+
+
+from sqlalchemy import create_engine, Column, Integer, String, Text
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+# Criar a conexão com o banco SQLite
+engine = create_engine("sqlite:///database.db")  # Arquivo database.db será salvo na mesma pasta
+Base = declarative_base()
+
+# Definir a tabela no banco
+class NFSe(Base):
+    __tablename__ = "nfses"
+    id = Column(Integer, primary_key=True)  # ID único
+    cliente = Column(String(255), nullable=False)  # Nome do cliente
+    data_envio = Column(String(50), nullable=False)  # Data de upload
+    arquivo_xml = Column(Text, nullable=False)  # Conteúdo do arquivo XML
+
+# Criar o arquivo do banco e a tabela
+Base.metadata.create_all(engine)  # Isso cria o database.db e a tabela 'nfses'
+
+# Sessão para interagir com o banco
+Session = sessionmaker(bind=engine)
+session = Session()
