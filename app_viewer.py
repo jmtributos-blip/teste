@@ -8,6 +8,26 @@ import numpy as np
 import io # Importado para manipulação de bytes para download de Excel
 import json # Para gerar o JSON do Plotly
 
+import streamlit as st
+
+st.set_page_config(
+    page_title="Minha Aplicação Fiscal",
+    page_icon="📊",
+    layout="wide"
+)
+
+st.title("Bem-vindo à Aplicação de Análise Fiscal!")
+st.markdown("""
+    Selecione uma das opções no menu lateral para começar:
+    - **Visualizador NFSe:** Analise suas Notas Fiscais de Serviço Eletrônicas e confira retenções.
+    - **Divisão de Sócios:** (Em construção) Gerencie a divisão de lucros entre sócios.
+""")
+
+st.info("Utilize a barra lateral à esquerda para navegar entre as seções da aplicação.")
+
+# Você pode adicionar mais conteúdo ou links aqui se desejar
+
+
 # Importa a função de extração do seu nfse_parser
 from nfse_parser import extract_nfse_data
 
@@ -1150,3 +1170,4 @@ st.warning("""
     Esta ferramenta **não substitui** a consulta e a análise de um contador ou profissional fiscal qualificado. 
     As regras tributárias podem variar e são complexas. Utilize estes dados apenas como referência e para facilitar a conferência inicial.
 """)
+
