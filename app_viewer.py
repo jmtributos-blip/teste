@@ -1,3 +1,17 @@
+import os
+
+# Caminho onde o banco deveria estar
+db_path = "database.db"
+
+# Verificar se o arquivo existe
+if os.path.exists(db_path):
+    print(f"Banco encontrado: {db_path}")
+else:
+    print("Banco de dados NÃO encontrado!")
+
+
+
+
 # app_viewer.py - REESCRITO COM DASHBOARD DE CONFERÊNCIA DE RETENÇÕES E ANÁLISE DE SEQUÊNCIA DE NF
 
 import streamlit as st
@@ -1248,3 +1262,4 @@ else:
             file_name=f"{registro.cliente}_nfse.xml",
             mime="application/xml"
         )
+
