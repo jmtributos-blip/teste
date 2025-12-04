@@ -1338,5 +1338,22 @@ if st.button("Buscar"):
     else:
         st.warning("Nenhum registro encontrado para sua busca!")
 
+import pandas as pd
+
+# Buscar registros do banco
+registros = session.query(NFSe).all()
+
+# Transformar os registros em DataFrame
+dados = [{
+    "ID": registro.id,
+    "Cliente": registro.cliente,
+    "Data de Envio": registro.data_envio,
+} for registro in registros]
+
+# Mostrar a tabela no Streamlit
+df = pd.DataFrame(dados)
+st.dataframe(df)
+
+
 
 
