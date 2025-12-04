@@ -1167,7 +1167,84 @@ st.warning("""
     **Disclaimer Importante:** As informações e os cálculos de impostos apresentados nesta ferramenta são **estimativas** baseadas nos dados extraídos das NFSe e nas alíquotas padrão fornecidas para o regime de Lucro Presumido (Normal). 
     As alíquotas e limites para cálculo das retenções esperadas são valores de referência e **podem necessitar de ajustes** de acordo com a legislação específica do seu município, tipo de serviço, regime tributário exato do prestador e tomador, e outras particularidades fiscais.
 
-    Esta ferramenta **não substitui** a consulta e a análise de um contador ou profissional fiscal qualificado. 
+    Esta ferramenta **não substitui** a consulta e a análise de um contador ou profissional fiscal qualificado.      
     As regras tributárias podem variar e são complexas. Utilize estes dados apenas como referência e para facilitar a conferência inicial.
 """)
 
+
+
+
+from sqlalchemy import create_engine, Column, Integer, String, Text
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+# ====== CONFIGURAÇÕES INICIAIS ======
+# Criar o arquivo do SQLite (salvo como "database.db")
+engine = create_engine("sqlite:///database.db")
+Base = declarative_base()
+
+# ====== CRIAR A TABELA "NFS-e" ======
+class NFSe(Base):
+    __tablename__ = "nfses"
+    id = Column(Integer, primary_key=True)  # ID único para cada registro
+    cliente = Column(String(255), nullable=False)  # Nome do cliente
+    data_envio = Column(String(50), nullable=False)  # Data de upload
+    arquivo_xml = Column(Text, nullable=False)  # Conteúdo do XML salvo como texto
+
+# Criar as tabelas no banco de dados
+Base.metadata.create_all(engine)
+
+# Configurar conexão com o banco e criar uma sessão para adicionar/registros
+Session = sessionmaker(bind=engine)
+session = Session()
+
+
+import streamlit as st
+import datetime
+
+# Mantendo a configuração do banco de dados
+session = Session()
+
+# Título do app
+st.title("Gerenciador de NFS-e")
+
+# Formulário para upload do XML
+st.subheader("Envie um arquivo XML")
+arquivo_upload = st.file_uploader("Envie sua NFS-e (somente formato XML):", type=["xml"])
+
+if arquivo_upload:
+    # Ler o arquivo XML enviado pelo cliente
+    xml_content = arquivo_upload.read().decode("utf-8")  # Lê o arquivo como texto
+    cliente = st.text_input("Informe o nome do cliente:")  # Campo para nome do cliente
+
+    # Botão para salvar o XML no banco
+    if cliente and st.button("Salvar"):
+        data_envio = str(datetime.datetime.now())  # Registrar a data e hora do envio
+        novo_registro = NFSe(cliente=cliente, data_envio=data_envio, arquivo_xml=xml_content)
+
+        session.add(novo_registro)  # Adicionar ao banco
+        session.commit()  # Gravar no banco
+        st.success("Arquivo XML salvo no banco de dados com sucesso!")
+
+# Mostrar registros existentes no banco de dados
+st.header("NFS-e Armazenadas no Banco de Dados")
+registros = session.query(NFSe).all()  # Buscar todos os registros do banco
+
+if not registros:
+    st.info("Nenhuma NFS-e foi enviada ainda.")
+else:
+    for registro in registros:
+        st.subheader(f"NFSe do Cliente: {registro.cliente}")
+        st.text(f"Data de Envio: {registro.data_envio}")
+
+        # Botão para visualizar o XML
+        if st.button(f"Visualizar XML ({registro.id})", key=f"ver-{registro.id}"):
+            st.code(registro.arquivo_xml, language="xml")  # Exibir o código XML diretamente na página
+
+        # Botão para download do XML
+        st.download_button(
+            label="Baixar XML",
+            data=registro.arquivo_xml.encode("utf-8"),
+            file_name=f"{registro.cliente}_nfse.xml",
+            mime="application/xml"
+        )
