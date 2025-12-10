@@ -1200,11 +1200,11 @@ else:
         else:
             st.warning("Nenhuma coluna selecionada para exibição. Por favor, selecione as colunas desejadas no 'Gerenciar Colunas'.")
 
-    elif selected_competence:
+        elif selected_competence:
         st.info(f"Nenhuma NFSe encontrada para a competência **{selected_competence}**.")
-    else:
+        else:
         st.info("Selecione uma competência acima para visualizar os dados.")
-    else:    
+        else:    
     st.info("Faça o upload dos arquivos XML e clique em processar para visualizar os dados e iniciar a conferência.")
 
 st.subheader("Log de Atividades:")
@@ -1254,6 +1254,7 @@ Base.metadata.create_all(engine)
 # Configurar conexão com o banco e criar uma sessão para adicionar/registros
 Session = sessionmaker(bind=engine)
 session = Session()
+
 
 
 
