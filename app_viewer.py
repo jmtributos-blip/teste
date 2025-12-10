@@ -726,8 +726,11 @@ else:
     df_full = df_full.dropna(subset=['Competência'])
 
     # Ordena as competências de maneira decrescente
-    available_competencias = sorted(df_full['Competência'].unique(), reverse=True)
+    if 'Competência' in df_full.columns:
+    available_competencias = df_full['Competência'].unique().tolist()
+    available_competencias = sorted(available_competencias)
 else:
+    available_competencias = []
     st.warning("A coluna 'Competência' não foi encontrada no DataFrame.")
     available_competencias = []
     if not available_competencias:
@@ -1252,6 +1255,7 @@ Base.metadata.create_all(engine)
 # Configurar conexão com o banco e criar uma sessão para adicionar/registros
 Session = sessionmaker(bind=engine)
 session = Session()
+
 
 
 
