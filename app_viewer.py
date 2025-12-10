@@ -716,7 +716,7 @@ if 'Competência' in df_full.columns:
     available_competencias = sorted(df_full['Competência'].unique(), reverse=True)
 else:
     st.warning("A coluna 'Competência' não foi encontrada no DataFrame.")
-    available_competencias = []if 'Competência' in df_full.columns:
+    available_competencias = [] if 'Competência' in df_full.columns:
     # Garantir que a coluna Competência esteja no formato correto (YYYY-MM)
     df_full['Competência'] = pd.to_datetime(
         df_full['Competência'], format='%Y-%m', errors='coerce'
@@ -1252,5 +1252,6 @@ Base.metadata.create_all(engine)
 # Configurar conexão com o banco e criar uma sessão para adicionar/registros
 Session = sessionmaker(bind=engine)
 session = Session()
+
 
 
