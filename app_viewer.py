@@ -86,12 +86,6 @@ column_display_names = {
     'CodigoMunicipioServico': 'Cód. Município Serviço',
 
     # Valores do Serviço
-    # Inicialização do estado da sessão
-if "df_all_notes" not in st.session_state:
-    # Inicialize com um valor padrão: um DataFrame vazio
-    import pandas as pd
-    st.session_state.df_all_notes = pd.DataFrame()
-    
     'ValorServicos': 'Valor dos Serviços',
     'ValorDeducoes': 'Deduções',
     'ValorPis': 'PIS',
@@ -1359,6 +1353,7 @@ dados = [{
 # Mostrar a tabela no Streamlit
 df = pd.DataFrame(dados)
 st.dataframe(df)
+
 
 
 
