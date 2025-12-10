@@ -1,28 +1,78 @@
-import os
-
-# Caminho onde o banco deveria estar
-db_path = "database.db"
-
-# Verificar se o arquivo existe
-if os.path.exists(db_path):
-    print(f"Banco encontrado: {db_path}")
-else:
-    print("Banco de dados NÃO encontrado!")
-
-
-
-
-# app_viewer.py - REESCRITO COM DASHBOARD DE CONFERÊNCIA DE RETENÇÕES E ANÁLISE DE SEQUÊNCIA DE NF
-
 import streamlit as st
 import pandas as pd
 import os
 import tempfile
 import numpy as np
-import io # Importado para manipulação de bytes para download de Excel
-import json # Para gerar o JSON do Plotly
+import io
+import json
+from sqlalchemy import create_engine, Column, Integer, String, Text
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from nfse_parser import extract_nfse_data
 
-import streamlit as st
+# ====== CONFIGURAÇÕES DO BANCO DE DADOS ======
+engine = create_engine("sqlite:///database.db")
+Base = declarative_base()
+
+class NFSe(Base):
+    __tablename__ = "nfses"
+    id = Column(Integer, primary_key=True)  
+    cliente = Column(String(255), nullable=False)  
+    data_envio = Column(String(50), nullable=False)  
+    arquivo_xml = Column(Text, nullable=False)  
+
+# Criar tabelas no banco, se não existirem
+Base.metadata.create_all(engine)
+
+# Sessão para interagir com o banco de dados
+Session = sessionmaker(bind=engine)
+session = Session()
+
+# ====== INÍCIO DO APLICATIVO ======
+st.set_page_config(
+    page_title="Minha Aplicação Fiscal",
+    page_icon="📊",
+    layout="wide"
+)
+
+st.title("Bem-vindo à Aplicação de Análise Fiscal!")
+st.markdown("""
+    Selecione uma das opções no menu lateral para começar:
+    - **Visualizador NFSe:** Analise suas Notas Fiscais de Serviço Eletrônicas e confira retenções.
+    - **Divisão de Sócios:** (Em construção) Gerencie a divisão de lucros entre sócios.
+""")
+
+# --- Exibição de Registros do Banco de Dados ---
+st.header("NFS-es Salvas no Banco de Dados")
+registros = session.query(NFSe).all()
+
+if not registros:
+    st.info("Nenhuma NFS-e encontrada.")
+else:
+    # Mostra os registros em formato de tabela
+    dados = [{
+        "ID": registro.id,
+        "Cliente": registro.cliente,
+        "Data de Envio": registro.data_envio,
+    } for registro in registros]
+
+    df = pd.DataFrame(dados)
+    st.dataframe(df)
+
+    # Exibir dados detalhados
+    for registro in registros:
+        st.subheader(f"NFS-e ID: {registro.id} - Cliente: {registro.cliente}")
+        st.text(f"Data de Envio: {registro.data_envio}")
+        # Botão para visualizar XML
+        if st.button(f"Visualizar XML ({registro.id})", key=f"ver-{registro.id}"):
+            st.code(registro.arquivo_xml, language="xml")
+        # Botão para baixar XML
+        st.download_button(
+            label="Baixar XML",
+            data=registro.arquivo_xml.encode("utf-8"),
+            file_name=f"{registro.cliente}_nfse_{registro.id}.xml",
+            mime="application/xml"
+        )
 
 st.set_page_config(
     page_title="Minha Aplicação Fiscal",
@@ -992,7 +1042,7 @@ if st.session_state.df_processed_viewer is not None and not st.session_state.df_
                     else:
                         st.success("🎉 Nenhuma NFSe com inconsistências ou alertas para mostrar nesta competência!")
             else:
-                st.success("�� Nenhuma inconsistência de retenção encontrada para as notas ativas nesta competência!")
+                st.success("   Nenhuma inconsistência de retenção encontrada para as notas ativas nesta competência!")
 
 
         st.markdown("---") # Separador visual
@@ -1181,13 +1231,11 @@ st.warning("""
     **Disclaimer Importante:** As informações e os cálculos de impostos apresentados nesta ferramenta são **estimativas** baseadas nos dados extraídos das NFSe e nas alíquotas padrão fornecidas para o regime de Lucro Presumido (Normal). 
     As alíquotas e limites para cálculo das retenções esperadas são valores de referência e **podem necessitar de ajustes** de acordo com a legislação específica do seu município, tipo de serviço, regime tributário exato do prestador e tomador, e outras particularidades fiscais.
 
-    Esta ferramenta **não substitui** a consulta e a análise de um contador ou profissional fiscal qualificado.      
+    Esta ferramenta **não substitui** a consulta e a análise de um contador ou profissional fiscal qualificado. 
     As regras tributárias podem variar e são complexas. Utilize estes dados apenas como referência e para facilitar a conferência inicial.
 """)
 
 
-
-
 from sqlalchemy import create_engine, Column, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -1211,84 +1259,6 @@ Base.metadata.create_all(engine)
 # Configurar conexão com o banco e criar uma sessão para adicionar/registros
 Session = sessionmaker(bind=engine)
 session = Session()
-
-
-import streamlit as st
-import datetime
-
-# Mantendo a configuração do banco de dados
-session = Session()
-
-# Título do app
-st.title("Gerenciador de NFS-e")
-
-# Formulário para upload do XML
-st.subheader("Envie um arquivo XML")
-arquivo_upload = st.file_uploader("Envie sua NFS-e (somente formato XML):", type=["xml"])
-
-if arquivo_upload:
-    # Ler o arquivo XML enviado pelo cliente
-    xml_content = arquivo_upload.read().decode("utf-8")  # Lê o arquivo como texto
-    cliente = st.text_input("Informe o nome do cliente:")  # Campo para nome do cliente
-
-    # Botão para salvar o XML no banco
-    if cliente and st.button("Salvar"):
-        data_envio = str(datetime.datetime.now())  # Registrar a data e hora do envio
-        novo_registro = NFSe(cliente=cliente, data_envio=data_envio, arquivo_xml=xml_content)
-
-        session.add(novo_registro)  # Adicionar ao banco
-        session.commit()  # Gravar no banco
-        st.success("Arquivo XML salvo no banco de dados com sucesso!")
-
-# Mostrar registros existentes no banco de dados
-st.header("NFS-e Armazenadas no Banco de Dados")
-registros = session.query(NFSe).all()  # Buscar todos os registros do banco
-
-if not registros:
-    st.info("Nenhuma NFS-e foi enviada ainda.")
-else:
-    for registro in registros:
-        st.subheader(f"NFSe do Cliente: {registro.cliente}")
-        st.text(f"Data de Envio: {registro.data_envio}")
-
-        # Botão para visualizar o XML
-        if st.button(f"Visualizar XML ({registro.id})", key=f"ver-{registro.id}"):
-            st.code(registro.arquivo_xml, language="xml")  # Exibir o código XML diretamente na página
-
-        # Botão para download do XML
-        st.download_button(
-            label="Baixar XML",
-            data=registro.arquivo_xml.encode("utf-8"),
-            file_name=f"{registro.cliente}_nfse.xml",
-            mime="application/xml"
-        )
-
-
-
-from sqlalchemy import create_engine, Column, Integer, String, Text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-
-# ====== CONFIGURAÇÕES INICIAIS ======
-# Criar o arquivo do SQLite (salvo como "database.db")
-engine = create_engine("sqlite:///database.db")
-Base = declarative_base()
-
-# ====== CRIAR A TABELA "NFS-e" ======
-class NFSe(Base):
-    __tablename__ = "nfses"
-    id = Column(Integer, primary_key=True)  # ID único para cada registro
-    cliente = Column(String(255), nullable=False)  # Nome do cliente
-    data_envio = Column(String(50), nullable=False)  # Data de upload
-    arquivo_xml = Column(Text, nullable=False)  # Conteúdo do XML salvo como texto
-
-# Criar as tabelas no banco de dados
-Base.metadata.create_all(engine)
-
-# Configurar conexão com o banco e criar uma sessão para adicionar/registros
-Session = sessionmaker(bind=engine)
-session = Session()
-
 
 import streamlit as st
 
@@ -1319,26 +1289,7 @@ else:
             mime="application/xml"
         )
 
-
-
-# Filtro por ID ou Nome
-busca_id = st.text_input("Digite o ID ou Nome do Cliente para buscar:")
-if st.button("Buscar"):
-    if busca_id.isdigit():
-        # Filtrar por ID
-        resultado = session.query(NFSe).filter(NFSe.id == int(busca_id)).all()
-    else:
-        # Filtrar por Nome
-        resultado = session.query(NFSe).filter(NFSe.cliente.ilike(f"%{busca_id}%")).all()
-
-    if resultado:
-        for registro in resultado:
-            st.write(f"Resultado encontrado - ID: {registro.id}, Nome: {registro.cliente}")
-            st.code(registro.arquivo_xml, language="xml")
-    else:
-        st.warning("Nenhum registro encontrado para sua busca!")
-
-import pandas as pd
+        import pandas as pd
 
 # Buscar registros do banco
 registros = session.query(NFSe).all()
@@ -1353,8 +1304,3 @@ dados = [{
 # Mostrar a tabela no Streamlit
 df = pd.DataFrame(dados)
 st.dataframe(df)
-
-
-
-
-
