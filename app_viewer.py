@@ -1197,16 +1197,22 @@ else:
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     width='stretch'
                 )
-        else:
-            st.warning("Nenhuma coluna selecionada para exibição. Por favor, selecione as colunas desejadas no 'Gerenciar Colunas'.")
+        if available_competencias:
+    selected_competence = st.selectbox(
+        "Selecione a competência para conferência:",
+        options=available_competencias,
+        help="Selecione o mês e ano para o qual você deseja conferir as notas fiscais."
+    )
+    # Filtra o DataFrame pela competência selecionada
+    df_competence = df_full[df_full['Competência'] == selected_competence].copy()
 
-        elif selected_competence:
+    if selected_competence and not df_competence.empty:
+        st.info(f"Exibindo dados para a competência: {selected_competence}")
+        # Aqui você implementa a lógica para exibir os dados da competência
+    elif selected_competence:
         st.info(f"Nenhuma NFSe encontrada para a competência **{selected_competence}**.")
-        else:
+    else:
         st.info("Selecione uma competência acima para visualizar os dados.")
-        else:    
-    st.info("Faça o upload dos arquivos XML e clique em processar para visualizar os dados e iniciar a conferência.")
-
 st.subheader("Log de Atividades:")
 log_container_viewer = st.container(height=300, border=True)
 for message, level in st.session_state.log_messages_viewer:
@@ -1254,6 +1260,7 @@ Base.metadata.create_all(engine)
 # Configurar conexão com o banco e criar uma sessão para adicionar/registros
 Session = sessionmaker(bind=engine)
 session = Session()
+
 
 
 
