@@ -1,4 +1,4 @@
-    import os
+import os
 
 # Caminho onde o banco deveria estar
 db_path = "database.db"
@@ -1353,6 +1353,7 @@ dados = [{
 # Mostrar a tabela no Streamlit
 df = pd.DataFrame(dados)
 st.dataframe(df)
+
 
 
 
