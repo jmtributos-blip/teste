@@ -703,7 +703,7 @@ if st.session_state.df_processed_viewer is not None and not st.session_state.df_
         available_competencias = []
 
     # --- Seletor de Competência ---
-  if 'Competência' in df_full.columns:
+if 'Competência' in df_full.columns:
     # Garantir que a coluna Competência esteja no formato correto (YYYY-MM)
     df_full['Competência'] = pd.to_datetime(
         df_full['Competência'], format='%Y-%m', errors='coerce'
@@ -1252,4 +1252,5 @@ Base.metadata.create_all(engine)
 # Configurar conexão com o banco e criar uma sessão para adicionar/registros
 Session = sessionmaker(bind=engine)
 session = Session()
+
 
