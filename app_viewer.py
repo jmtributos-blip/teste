@@ -685,10 +685,51 @@ if st.button("PROCESSAR XMLs para Visualização", type="primary", width='stretc
 st.header("2. Conferência de Notas Fiscais e Diagnóstico")
 
 if st.session_state.df_processed_viewer is not None and not st.session_state.df_processed_viewer.empty:
-    df_full = st.session_state.df_processed_viewer.copy() # Trabalhar com uma cópia
+    df_full = st.session_state.df_processed_viewer.copy()  # Trabalhar com uma cópia
+
+    if 'Competência' in df_full.columns:
+        # Padronizar a coluna Competência
+        df_full['Competência'] = pd.to_datetime(
+            df_full['Competência'], format='%Y-%m', errors='coerce'
+        ).dt.strftime('%Y-%m')  # Formatar no padrão YYYY-MM
+
+        # Remove valores NaN/NaT resultantes da conversão inválida
+        df_full = df_full.dropna(subset=['Competência'])
+
+        # Ordenar as competências únicas de forma decrescente
+        available_competencias = sorted(df_full['Competência'].unique(), reverse=True)
+    else:
+        st.warning("A coluna 'Competência' não foi encontrada no DataFrame.")
+        available_competencias = []
 
     # --- Seletor de Competência ---
+  if 'Competência' in df_full.columns:
+    # Garantir que a coluna Competência esteja no formato correto (YYYY-MM)
+    df_full['Competência'] = pd.to_datetime(
+        df_full['Competência'], format='%Y-%m', errors='coerce'
+    ).dt.strftime('%Y-%m')  # Formata para ano-mês
+
+    # Remove valores inválidos (NaT ou células sem dados)
+    df_full = df_full.dropna(subset=['Competência'])
+
+    # Ordena as competências de maneira decrescente
     available_competencias = sorted(df_full['Competência'].unique(), reverse=True)
+else:
+    st.warning("A coluna 'Competência' não foi encontrada no DataFrame.")
+    available_competencias = []if 'Competência' in df_full.columns:
+    # Garantir que a coluna Competência esteja no formato correto (YYYY-MM)
+    df_full['Competência'] = pd.to_datetime(
+        df_full['Competência'], format='%Y-%m', errors='coerce'
+    ).dt.strftime('%Y-%m')  # Formata para ano-mês
+
+    # Remove valores inválidos (NaT ou células sem dados)
+    df_full = df_full.dropna(subset=['Competência'])
+
+    # Ordena as competências de maneira decrescente
+    available_competencias = sorted(df_full['Competência'].unique(), reverse=True)
+else:
+    st.warning("A coluna 'Competência' não foi encontrada no DataFrame.")
+    available_competencias = []
     if not available_competencias:
         st.warning("Não foi possível extrair competências das NFSe carregadas.")
         selected_competence = None
@@ -1211,3 +1252,4 @@ Base.metadata.create_all(engine)
 # Configurar conexão com o banco e criar uma sessão para adicionar/registros
 Session = sessionmaker(bind=engine)
 session = Session()
+
