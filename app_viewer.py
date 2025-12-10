@@ -1197,7 +1197,7 @@ else:
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     width='stretch'
                 )
-       if available_competencias:
+    if available_competencias:
     selected_competence = st.selectbox(
         "Selecione a competência para conferência:",
         options=available_competencias,
@@ -1262,6 +1262,7 @@ Base.metadata.create_all(engine)
 # Configurar conexão com o banco e criar uma sessão para adicionar/registros
 Session = sessionmaker(bind=engine)
 session = Session()
+
 
 
 
